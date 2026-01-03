@@ -3,11 +3,25 @@ import { Platform } from 'react-native';
 let db = null;
 const IS_WEB = Platform.OS === 'web';
 
-// Solo importamos SQLite si NO estamos en la web para evitar el error de .wasm
-if (!IS_WEB) {
-  const SQLite = require('expo-sqlite');
-  db = SQLite.openDatabaseSync('enfoque3.db');
-}
+const getDb = () => {
+  if (IS_WEB) return null;
+  if (!db) {
+    const SQLite = require('expo-sqlite');
+    db = SQLite.openDatabaseSync('enfoque3.db');
+  }
+  return db;
+};
+
+const uriToBase64 = async (uri) => {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
 
 export const initDB = () => {
   if (IS_WEB) {
@@ -15,7 +29,8 @@ export const initDB = () => {
       localStorage.setItem('photos', JSON.stringify([]));
     }
   } else {
-    db.execSync(`
+    const database = getDb();
+    database.execSync(`
       CREATE TABLE IF NOT EXISTS photos (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         uri TEXT, 
@@ -25,16 +40,20 @@ export const initDB = () => {
   }
 };
 
-export const savePhoto = (uri) => {
+export const savePhoto = async (uri) => {
   const date = new Date().toISOString().split('T')[0];
 
   if (IS_WEB) {
+    // CONVERTIMOS A BASE64 PARA PERSISTENCIA REAL EN WEB
+    const base64Data = await uriToBase64(uri);
     const photos = JSON.parse(localStorage.getItem('photos') || '[]');
-    const newPhoto = { id: Date.now(), uri, date };
+    const newPhoto = { id: Date.now(), uri: base64Data, date };
     photos.push(newPhoto);
     localStorage.setItem('photos', JSON.stringify(photos));
   } else {
-    db.runSync('INSERT INTO photos (uri, date) VALUES (?, ?)', [uri, date]);
+    // En móvil las URIs de archivo son permanentes, no hace falta base64
+    const database = getDb();
+    database.runSync('INSERT INTO photos (uri, date) VALUES (?, ?)', [uri, date]);
   }
 };
 
@@ -51,7 +70,8 @@ export const deletePhoto = (id) => {
       return false;
     }
   } else {
-    db.runSync('DELETE FROM photos WHERE id = ?', [id]);
+    const database = getDb();
+    database.runSync('DELETE FROM photos WHERE id = ?', [id]);
     return true;
   }
 };
@@ -62,6 +82,7 @@ export const getDailyPhotos = (date) => {
     // Filtramos por fecha y limitamos a 3
     return photos.filter(p => p.date === date).slice(0, 3);
   } else {
-    return db.getAllSync('SELECT * FROM photos WHERE date = ? LIMIT 3', [date]);
+    const database = getDb();
+    return database.getAllSync('SELECT * FROM photos WHERE date = ? LIMIT 3', [date]);
   }
 };

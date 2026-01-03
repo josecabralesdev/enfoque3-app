@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated } from 'react-native';
 
-const FadeInView = ({ children }) => {
+const FadeInView = ({ children, style }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current; // Opacidad inicial 0
 
   useEffect(() => {
@@ -13,7 +13,7 @@ const FadeInView = ({ children }) => {
   }, [fadeAnim]);
 
   return (
-    <Animated.View style={{ opacity: fadeAnim }}>
+    <Animated.View style={[{ opacity: fadeAnim }, style]}>
       {children}
     </Animated.View>
   );

@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Alert, Platf
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as database from './db/database';
+import CelebrationModal from './components/CelebrationModal';
 import FadeInView from './components/FadeInView';
 
 export default function HomeScreen() {
@@ -10,15 +11,11 @@ export default function HomeScreen() {
   const [photos, setPhotos] = useState([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [cameraRef, setCameraRef] = useState(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
   const pickImage = async () => {
-    if (photos.length >= 3) {
-      Alert.alert("Límite alcanzado", "Ya tienes tus 3 momentos de hoy.");
-      return;
-    }
-
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -27,7 +24,7 @@ export default function HomeScreen() {
     });
 
     if (!result.canceled) {
-      database.savePhoto(result.assets[0].uri);
+      await database.savePhoto(result.assets[0].uri);
       loadPhotos();
     }
   };
@@ -52,6 +49,55 @@ export default function HomeScreen() {
     }
   };
 
+  const showReplacePhotoDialog = (source) => {
+    if (Platform.OS === 'web') {
+      const options = photos.map((p, idx) => `Foto ${idx + 1}`).join('\n');
+      const choice = window.confirm(`Ya tienes 3 fotos.\n\n¿Cuál foto quieres reemplazar?\n${options}\n\nPresiona Cancelar para cancelar.`);
+
+      if (choice) {
+        // En web, no podemos mostrar un diálogo de selección complejo fácilmente
+        // Así que vamos a eliminar la primera foto y luego abrir la cámara/galería
+        const firstPhoto = photos[0];
+        if (firstPhoto) {
+          database.deletePhoto(firstPhoto.id);
+          loadPhotos();
+          setTimeout(() => {
+            if (source === 'camera') {
+              setIsCameraOpen(true);
+            } else {
+              pickImage();
+            }
+          }, 100);
+        }
+      }
+    } else {
+      // Para móvil, crear un diálogo con opciones
+      const options = photos.map((photo, index) => ({
+        text: `Foto ${index + 1}`,
+        onPress: () => {
+          database.deletePhoto(photo.id);
+          loadPhotos();
+          setTimeout(() => {
+            if (source === 'camera') {
+              setIsCameraOpen(true);
+            } else {
+              pickImage();
+            }
+          }, 100);
+        }
+      }));
+
+      Alert.alert(
+        "Límite alcanzado",
+        "Ya tienes 3 fotos. ¿Cuál quieres reemplazar?",
+        [
+          ...options,
+          { text: "Cancelar", style: "cancel" }
+        ]
+      );
+    }
+  };
+
   useEffect(() => {
     database.initDB();
     loadPhotos();
@@ -60,12 +106,21 @@ export default function HomeScreen() {
   const loadPhotos = () => {
     const data = database.getDailyPhotos(today);
     setPhotos([...data]);
+
+    // Si acaba de completar las 3, mostramos la celebración
+    if (data.length === 3) {
+      setShowCelebration(true);
+      // Opcional: Ocultarlo automáticamente después de 4 segundos
+      setTimeout(() => setShowCelebration(false), 4000);
+    } else {
+      setShowCelebration(false);
+    }
   };
 
   const takePicture = async () => {
     if (cameraRef) {
       const photo = await cameraRef.takePictureAsync();
-      database.savePhoto(photo.uri);
+      await database.savePhoto(photo.uri);
       setIsCameraOpen(false);
       loadPhotos();
     }
@@ -96,62 +151,145 @@ export default function HomeScreen() {
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Image source={require('../assets/logo-app.png')} style={styles.logo} />
-        <Text style={styles.header}>Enfoque3</Text>
-        <Text style={styles.sub}>Hoy agradezco por...</Text>
-      </View>
+  const renderPhotoItem = ({ item, index }) => {
+    const total = photos.length;
 
-      <FlatList
-        data={photos}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        renderItem={({ item }) => (
-          <FadeInView>
-            <View style={styles.photoWrapper}>
-              <Image source={{ uri: item.uri }} style={styles.photo} />
-              <TouchableOpacity
-                style={styles.deleteBadge}
-                onPress={() => handleDelete(item.id)}
-              >
-                <Text style={styles.deleteText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          </FadeInView>
-        )}
-      />
+    // Lógica de dimensiones para el Mosaico
+    let itemWidth = '48%';
+    let itemHeight = 180;
 
-      {photos.length < 3 && (
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.secondaryBtn} onPress={pickImage}>
-            <Text>Galería</Text>
-          </TouchableOpacity>
+    if (total === 1) {
+      itemWidth = '98%';
+      itemHeight = 300;
+    } else if (total === 3 && index === 0) {
+      itemWidth = '98%';
+      itemHeight = 250;
+    }
 
-          <TouchableOpacity style={styles.fab} onPress={() => setIsCameraOpen(true)}>
-            <Text style={styles.fabText}>+</Text>
+    return (
+      <FadeInView style={{ width: itemWidth, height: itemHeight, margin: '1%' }}>
+        <View style={styles.photoWrapper}>
+          <Image source={{ uri: item.uri }} style={styles.photo} />
+          <TouchableOpacity
+            style={styles.deleteBadge}
+            onPress={() => handleDelete(item.id)}
+          >
+            <Text style={styles.deleteText}>✕</Text>
           </TouchableOpacity>
         </View>
-      )}
+      </FadeInView>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Contenedor de la lista - ocupa el espacio restante */}
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={photos}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={2}
+          key={`grid-${photos.length}`}
+          contentContainerStyle={styles.mosaicContainer}
+          renderItem={renderPhotoItem}
+          ListHeaderComponent={
+            <View style={styles.logoContainer}>
+              <Image source={require('../assets/logo-app.png')} style={styles.logo} />
+              <Text style={styles.header}>Enfoque3</Text>
+              <Text style={styles.sub}>Hoy agradezco por...</Text>
+              {photos.length === 3 && (
+                <Text style={styles.infoComplete}>¡Tríptico completo! Puedes reemplazar fotos si lo deseas.</Text>
+              )}
+            </View>
+          }
+          ListEmptyComponent={<Text style={styles.empty}>Tu tríptico de hoy está esperando...</Text>}
+        />
+      </View>
+
+      {/* MODAL DE CELEBRACIÓN */}
+      <CelebrationModal visible={showCelebration} />
+
+      {/* BOTONES FIJOS EN LA PARTE INFERIOR - SIEMPRE VISIBLES */}
+      <View style={styles.fixedBottomButtons}>
+        <TouchableOpacity
+          style={styles.secondaryBtn}
+          onPress={photos.length >= 3 ? () => showReplacePhotoDialog('gallery') : pickImage}
+        >
+          <Text style={styles.btnText}>Galería</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={photos.length >= 3 ? () => showReplacePhotoDialog('camera') : () => setIsCameraOpen(true)}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      </View>
+
     </View>
-  );
-}
+  )
+};
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFAF0', padding: 20 },
-  header: { fontSize: 32, fontWeight: 'bold', textAlign: 'center', marginTop: 40, color: '#4A4A4A' },
-  sub: { fontSize: 18, textAlign: 'center', color: '#888', marginBottom: 20 },
-  photo: { width: '100%', height: 250, borderRadius: 20, marginBottom: 15 },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFAF0'
+  },
+  mosaicContainer: {
+    paddingHorizontal: 10,
+    paddingBottom: 120,
+    flexDirection: 'column',
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#4A4A4A',
+    letterSpacing: 1,
+    textAlign: 'center',
+    marginTop: 40,
+  },
+  sub: { fontSize: 18, textAlign: 'center', color: '#888', marginBottom: 10 },
+  infoComplete: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#2E7D32',
+    fontWeight: '600',
+    backgroundColor: '#E8F5E9',
+    padding: 8,
+    borderRadius: 8,
+    marginHorizontal: 20,
+    marginTop: 5
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
   camera: { flex: 1 },
   cameraButtons: { flex: 1, justifyContent: 'flex-end', alignItems: 'center', marginBottom: 40 },
   shutter: { width: 80, height: 80, backgroundColor: 'white', borderRadius: 40, borderWidth: 6, borderColor: 'rgba(0,0,0,0.2)' },
-  fab: { position: 'absolute', bottom: 30, right: 30, backgroundColor: '#FFD700', width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', elevation: 5 },
-  fabText: { fontSize: 30, color: 'white' },
+  fab: {
+    backgroundColor: '#FFD700',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  fabText: {
+    fontSize: 30,
+    color: 'white',
+    fontWeight: 'bold'
+  },
   empty: { textAlign: 'center', marginTop: 50, color: '#BBB' },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 40,
     marginBottom: 20,
   },
   logo: {
@@ -160,52 +298,52 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 20,
   },
-  header: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#4A4A4A',
-    letterSpacing: 1,
-  },
   photoWrapper: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#eee',
     position: 'relative',
-    marginBottom: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
   deleteBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(255, 0, 0, 0.7)',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
   },
   deleteText: { color: 'white', fontWeight: 'bold' },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 30,
-    width: '100%',
-    paddingHorizontal: 20
-  },
   secondaryBtn: {
     backgroundColor: '#E0E0E0',
-    padding: 15,
-    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
   },
-  fab: {
-    backgroundColor: '#FFD700',
-    width: 65,
-    height: 65,
-    borderRadius: 35,
+  fixedBottomButtons: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 100,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-  }
-});
+    backgroundColor: 'rgba(255, 250, 240, 0.9)',
+    gap: 30,
+    paddingBottom: 20,
+  },
+  btnText: {
+    fontWeight: '600',
+    color: '#4A4A4A'
+  },
+})

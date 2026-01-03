@@ -62,7 +62,7 @@ La aplicación requiere permisos de:
 *Desarrollado como una herramienta para la salud mental y la apreciación diaria.*
 
 ¿Te gustaría que personalicemos el diseño de la galería para que las fotos se vean como un "mural de felicidad" tipo collage?
-¿Te gustaría que te ayude a crear un diseño de "Mosaico" para el HomeScreen para que las 3 fotos se vean como una composición artística?
+
 ¿Te gustaría que añadiera un "Historial de Gratitud" para que el usuario pueda ver sus fotos de días anteriores deslizando hacia atrás?
 ¿Quieres que personalicemos el mensaje de las notificaciones para que cada día de la semana sea una frase de gratitud distinta?
 ¿Te gustaría que te ayude a crear una Pantalla de Estadísticas simple para que el usuario vea cuántos días seguidos lleva practicando la gratitud?
