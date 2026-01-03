@@ -38,6 +38,24 @@ export const savePhoto = (uri) => {
   }
 };
 
+export const deletePhoto = (id) => {
+  if (Platform.OS === 'web') {
+    try {
+      const photos = JSON.parse(localStorage.getItem('photos') || '[]');
+      // Forzamos la comparación de IDs como strings para evitar errores de tipo
+      const updatedPhotos = photos.filter(p => String(p.id) !== String(id));
+      localStorage.setItem('photos', JSON.stringify(updatedPhotos));
+      return true;
+    } catch (error) {
+      console.error("Error al borrar en Web:", error);
+      return false;
+    }
+  } else {
+    db.runSync('DELETE FROM photos WHERE id = ?', [id]);
+    return true;
+  }
+};
+
 export const getDailyPhotos = (date) => {
   if (IS_WEB) {
     const photos = JSON.parse(localStorage.getItem('photos') || '[]');

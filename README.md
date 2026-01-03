@@ -60,3 +60,11 @@ La aplicación requiere permisos de:
 - **Notificaciones:** Para los recordatorios diarios a las 8:00 PM.
 
 *Desarrollado como una herramienta para la salud mental y la apreciación diaria.*
+
+¿Te gustaría que personalicemos el diseño de la galería para que las fotos se vean como un "mural de felicidad" tipo collage?
+¿Te gustaría que te ayude a crear un diseño de "Mosaico" para el HomeScreen para que las 3 fotos se vean como una composición artística?
+¿Te gustaría que añadiera un "Historial de Gratitud" para que el usuario pueda ver sus fotos de días anteriores deslizando hacia atrás?
+¿Quieres que personalicemos el mensaje de las notificaciones para que cada día de la semana sea una frase de gratitud distinta?
+¿Te gustaría que te ayude a crear una Pantalla de Estadísticas simple para que el usuario vea cuántos días seguidos lleva practicando la gratitud?
+
+Ahora que el usuario puede gestionar sus fotos del día perfectamente, ¿te gustaría añadir un botón de compartir para que, aunque no haya red social interna, el usuario pueda enviar su "Tríptico de Gratitud" del día como una sola imagen a sus amigos por WhatsApp o Instagram?

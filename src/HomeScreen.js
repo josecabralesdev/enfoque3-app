@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, FlatList } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Alert, Platform } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import * as database from './db/database';
+import FadeInView from './components/FadeInView';
 
 export default function HomeScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -11,6 +13,45 @@ export default function HomeScreen() {
 
   const today = new Date().toISOString().split('T')[0];
 
+  const pickImage = async () => {
+    if (photos.length >= 3) {
+      Alert.alert("Límite alcanzado", "Ya tienes tus 3 momentos de hoy.");
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      database.savePhoto(result.assets[0].uri);
+      loadPhotos();
+    }
+  };
+
+  const handleDelete = (id) => {
+    const performDelete = () => {
+      database.deletePhoto(id);
+      loadPhotos(); // Esto fuerza a React a pedir las fotos de nuevo y re-renderizar
+    };
+
+    if (Platform.OS === 'web') {
+      // Confirmación nativa del navegador para mayor compatibilidad
+      if (window.confirm("¿Quieres eliminar este momento para elegir otro?")) {
+        performDelete();
+      }
+    } else {
+      // Alerta nativa de React Native para iOS/Android
+      Alert.alert("Eliminar", "¿Quieres reemplazar este momento?", [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Eliminar", style: "destructive", onPress: performDelete }
+      ]);
+    }
+  };
+
   useEffect(() => {
     database.initDB();
     loadPhotos();
@@ -18,7 +59,7 @@ export default function HomeScreen() {
 
   const loadPhotos = () => {
     const data = database.getDailyPhotos(today);
-    setPhotos(data);
+    setPhotos([...data]);
   };
 
   const takePicture = async () => {
@@ -58,11 +99,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
-        <Image
-          source={require('../assets/logo-app.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Image source={require('../assets/logo-app.png')} style={styles.logo} />
         <Text style={styles.header}>Enfoque3</Text>
         <Text style={styles.sub}>Hoy agradezco por...</Text>
       </View>
@@ -70,17 +107,32 @@ export default function HomeScreen() {
       <FlatList
         data={photos}
         keyExtractor={(item) => item.id.toString()}
-        numColumns={1}
+        contentContainerStyle={{ paddingBottom: 100 }}
         renderItem={({ item }) => (
-          <Image source={{ uri: item.uri }} style={styles.photo} />
+          <FadeInView>
+            <View style={styles.photoWrapper}>
+              <Image source={{ uri: item.uri }} style={styles.photo} />
+              <TouchableOpacity
+                style={styles.deleteBadge}
+                onPress={() => handleDelete(item.id)}
+              >
+                <Text style={styles.deleteText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          </FadeInView>
         )}
-        ListEmptyComponent={<Text style={styles.empty}>Aún no hay fotos hoy.</Text>}
       />
 
       {photos.length < 3 && (
-        <TouchableOpacity style={styles.fab} onPress={() => setIsCameraOpen(true)}>
-          <Text style={styles.fabText}>+</Text>
-        </TouchableOpacity>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.secondaryBtn} onPress={pickImage}>
+            <Text>Galería</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.fab} onPress={() => setIsCameraOpen(true)}>
+            <Text style={styles.fabText}>+</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -114,4 +166,46 @@ const styles = StyleSheet.create({
     color: '#4A4A4A',
     letterSpacing: 1,
   },
+  photoWrapper: {
+    position: 'relative',
+    marginBottom: 15,
+  },
+  deleteBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(255, 0, 0, 0.7)',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteText: { color: 'white', fontWeight: 'bold' },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 30,
+    width: '100%',
+    paddingHorizontal: 20
+  },
+  secondaryBtn: {
+    backgroundColor: '#E0E0E0',
+    padding: 15,
+    borderRadius: 30,
+  },
+  fab: {
+    backgroundColor: '#FFD700',
+    width: 65,
+    height: 65,
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+  }
 });
