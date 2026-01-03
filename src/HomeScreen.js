@@ -57,8 +57,15 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Enfoque3</Text>
-      <Text style={styles.sub}>Hoy agradezco por...</Text>
+      <View style={styles.logoContainer}>
+        <Image
+          source={require('../assets/logo-app.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.header}>Enfoque3</Text>
+        <Text style={styles.sub}>Hoy agradezco por...</Text>
+      </View>
 
       <FlatList
         data={photos}
@@ -89,5 +96,22 @@ const styles = StyleSheet.create({
   shutter: { width: 80, height: 80, backgroundColor: 'white', borderRadius: 40, borderWidth: 6, borderColor: 'rgba(0,0,0,0.2)' },
   fab: { position: 'absolute', bottom: 30, right: 30, backgroundColor: '#FFD700', width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', elevation: 5 },
   fabText: { fontSize: 30, color: 'white' },
-  empty: { textAlign: 'center', marginTop: 50, color: '#BBB' }
+  empty: { textAlign: 'center', marginTop: 50, color: '#BBB' },
+  logoContainer: {
+    alignItems: 'center',
+    marginTop: 50,
+    marginBottom: 20,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+    borderRadius: 20,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#4A4A4A',
+    letterSpacing: 1,
+  },
 });
