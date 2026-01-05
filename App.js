@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
 import { AppState } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from './src/HomeScreen';
+import StatsScreen from './src/StatsScreen';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -10,6 +13,8 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+const Stack = createStackNavigator();
 
 export default function App() {
   useEffect(() => {
@@ -100,5 +105,32 @@ export default function App() {
     };
   }, []);
 
-  return <HomeScreen />;
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            title: "Enfoque3",
+            headerStyle: {
+              backgroundColor: '#FFFAF0',
+            },
+            headerTintColor: '#4A4A4A',
+          }}
+        />
+        <Stack.Screen
+          name="Stats"
+          component={StatsScreen}
+          options={{
+            title: "Estadísticas",
+            headerStyle: {
+              backgroundColor: '#FFFAF0',
+            },
+            headerTintColor: '#4A4A4A',
+          }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }

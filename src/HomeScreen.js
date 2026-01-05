@@ -5,8 +5,10 @@ import * as ImagePicker from 'expo-image-picker';
 import * as database from './db/database';
 import CelebrationModal from './components/CelebrationModal';
 import FadeInView from './components/FadeInView';
+import { useNavigation } from '@react-navigation/native';
 
 export default function HomeScreen() {
+  const navigation = useNavigation();
   const [permission, requestPermission] = useCameraPermissions();
   const [photos, setPhotos] = useState([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -198,32 +200,37 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* Contenedor de la lista - ocupa el espacio restante */}
-      <View style={{ flex: 1 }}>
-        <FlatList
-          data={photos}
-          keyExtractor={(item) => item.id.toString()}
-          key={`grid-${photos.length}`}
-          contentContainerStyle={styles.mosaicContainer}
-          renderItem={renderPhotoItem}
-          ListHeaderComponent={
-            <View style={styles.logoContainer}>
-              <Image source={require('../assets/logo-app.png')} style={styles.logo} />
-              <Text style={styles.header}>Enfoque3</Text>
-              <Text style={styles.sub}>Hoy agradezco por...</Text>
-              {photos.length === 3 && (
-                <Text style={styles.infoComplete}>¡Tríptico completo! Puedes reemplazar fotos si lo deseas.</Text>
-              )}
-            </View>
-          }
-          ListEmptyComponent={<Text style={styles.empty}>Tu tríptico de hoy está esperando...</Text>}
-        />
-      </View>
+      <FlatList
+        data={photos}
+        keyExtractor={(item) => item.id.toString()}
+        key={`grid-${photos.length}`}
+        contentContainerStyle={[styles.mosaicContainer, { paddingBottom: 150 }]}
+        renderItem={renderPhotoItem}
+        ListHeaderComponent={
+          <View style={styles.logoContainer}>
+            <Image source={require('../assets/logo-app.png')} style={styles.logo} />
+            <Text style={styles.header}>Enfoque3</Text>
+            <Text style={styles.sub}>Hoy agradezco por...</Text>
+            {photos.length === 3 && (
+              <Text style={styles.infoComplete}>¡Tríptico completo! Puedes reemplazar fotos si lo deseas.</Text>
+            )}
+          </View>
+        }
+        ListEmptyComponent={<Text style={styles.empty}>Tu tríptico de hoy está esperando...</Text>}
+      />
 
       {/* MODAL DE CELEBRACIÓN */}
       <CelebrationModal visible={showCelebration} />
 
       {/* BOTONES FIJOS EN LA PARTE INFERIOR - SIEMPRE VISIBLES */}
       <View style={styles.fixedBottomButtons}>
+        <TouchableOpacity
+          style={styles.secondaryBtn}
+          onPress={() => navigation.navigate('Stats')}
+        >
+          <Text style={styles.btnText}>Estadísticas</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.secondaryBtn}
           onPress={photos.length >= 3 ? () => showReplacePhotoDialog('gallery') : pickImage}
@@ -348,10 +355,10 @@ const styles = StyleSheet.create({
     right: 0,
     height: 100,
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-around',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 250, 240, 0.9)',
-    gap: 30,
+    paddingHorizontal: 20,
     paddingBottom: 20,
   },
   btnText: {
