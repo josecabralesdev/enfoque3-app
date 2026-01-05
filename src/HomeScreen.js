@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Alert, Platform } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Alert, Platform, Dimensions } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as database from './db/database';
@@ -153,23 +153,37 @@ export default function HomeScreen() {
 
   const renderPhotoItem = ({ item, index }) => {
     const total = photos.length;
+    const { width: screenWidth } = Dimensions.get('window');
+    const HORIZONTAL_PADDING = 10; // Corresponds to mosaicContainer paddingHorizontal
+    const ITEM_MARGIN = 5; // Horizontal margin for each item
 
-    // Lógica de dimensiones para el Mosaico
-    let itemWidth = '48%';
-    let itemHeight = 180;
+    let calculatedWidth;
+    let calculatedHeight;
 
     if (total === 1) {
-      itemWidth = '98%';
-      itemHeight = 300;
-    } else if (total === 3 && index === 0) {
-      itemWidth = '98%';
-      itemHeight = 250;
+      // Single image takes full width
+      calculatedWidth = screenWidth - (2 * HORIZONTAL_PADDING);
+      calculatedHeight = 300;
+    } else if (total === 2) {
+      // Two images, each takes full width for better visibility
+      calculatedWidth = screenWidth - (2 * HORIZONTAL_PADDING);
+      calculatedHeight = 200;
+    } else if (total === 3) {
+      if (index === 0) {
+        // First image takes full width
+        calculatedWidth = screenWidth - (2 * HORIZONTAL_PADDING);
+        calculatedHeight = 200;
+      } else {
+        // Second and third images share the remaining space
+        calculatedWidth = (screenWidth - (2 * HORIZONTAL_PADDING) - ITEM_MARGIN) / 2;
+        calculatedHeight = 180;
+      }
     }
 
     return (
-      <FadeInView style={{ width: itemWidth, height: itemHeight, margin: '1%' }}>
+      <FadeInView style={{ width: calculatedWidth, height: calculatedHeight, marginBottom: ITEM_MARGIN * 2, marginHorizontal: ITEM_MARGIN }}>
         <View style={styles.photoWrapper}>
-          <Image source={{ uri: item.uri }} style={styles.photo} />
+          <Image source={{ uri: item.uri }} style={[styles.photo, { width: calculatedWidth, height: calculatedHeight }]} />
           <TouchableOpacity
             style={styles.deleteBadge}
             onPress={() => handleDelete(item.id)}
@@ -188,7 +202,6 @@ export default function HomeScreen() {
         <FlatList
           data={photos}
           keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
           key={`grid-${photos.length}`}
           contentContainerStyle={styles.mosaicContainer}
           renderItem={renderPhotoItem}
@@ -238,7 +251,6 @@ const styles = StyleSheet.create({
   mosaicContainer: {
     paddingHorizontal: 10,
     paddingBottom: 120,
-    flexDirection: 'column',
   },
   header: {
     fontSize: 28,
