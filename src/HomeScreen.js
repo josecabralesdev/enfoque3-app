@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Alert, Platform, Dimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, Alert, Platform, Dimensions, ScrollView } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as database from './db/database';
@@ -198,26 +198,29 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {/* Contenedor de la lista - ocupa el espacio restante */}
-      <FlatList
-        data={photos}
-        keyExtractor={(item) => item.id.toString()}
-        key={`grid-${photos.length}`}
-        contentContainerStyle={[styles.mosaicContainer, { paddingBottom: 150 }]}
-        renderItem={renderPhotoItem}
-        ListHeaderComponent={
-          <View style={styles.logoContainer}>
-            <Image source={require('../assets/logo-app.png')} style={styles.logo} />
-            <Text style={styles.header}>Enfoque3</Text>
-            <Text style={styles.sub}>Hoy agradezco por...</Text>
-            {photos.length === 3 && (
-              <Text style={styles.infoComplete}>¡Tríptico completo! Puedes reemplazar fotos si lo deseas.</Text>
-            )}
-          </View>
-        }
-        ListEmptyComponent={<Text style={styles.empty}>Tu tríptico de hoy está esperando...</Text>}
-      />
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={photos}
+          keyExtractor={(item) => item.id.toString()}
+          key={`grid-${photos.length}`}
+          contentContainerStyle={styles.mosaicContainer}
+          renderItem={renderPhotoItem}
+          ListHeaderComponent={
+            <View style={styles.logoContainer}>
+              <Image source={require('../assets/logo-app.png')} style={styles.logo} />
+              <Text style={styles.header}>Enfoque3</Text>
+              <Text style={styles.sub}>Hoy agradezco por...</Text>
+              {photos.length === 3 && (
+                <Text style={styles.infoComplete}>¡Tríptico completo! Puedes reemplazar fotos si lo deseas.</Text>
+              )}
+            </View>
+          }
+          ListEmptyComponent={<Text style={styles.empty}>Tu tríptico de hoy está esperando...</Text>}
+          style={{ marginBottom: 120 }} // Add margin to account for fixed buttons
+        />
+      </View>
 
       {/* MODAL DE CELEBRACIÓN */}
       <CelebrationModal visible={showCelebration} />
@@ -246,7 +249,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-    </View>
+    </ScrollView>
   )
 };
 
@@ -257,7 +260,6 @@ const styles = StyleSheet.create({
   },
   mosaicContainer: {
     paddingHorizontal: 10,
-    paddingBottom: 120,
   },
   header: {
     fontSize: 28,

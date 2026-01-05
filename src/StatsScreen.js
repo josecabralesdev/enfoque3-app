@@ -16,10 +16,10 @@ export default function StatsScreen() {
       // Get all unique dates with photos
       const allPhotos = await getAllPhotos();
       const uniqueDates = [...new Set(allPhotos.map(photo => photo.date))].sort().reverse();
-      
+
       // Calculate total days with photos
       setTotalDays(uniqueDates.length);
-      
+
       // Calculate consecutive days
       const consecutive = calculateConsecutiveDays(uniqueDates);
       setConsecutiveDays(consecutive);
@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4A4A4A',
     marginBottom: 5,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
@@ -201,6 +202,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#4A4A4A',
     marginBottom: 5,
+    textAlign: 'center',
   },
   statDescription: {
     fontSize: 14,
