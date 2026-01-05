@@ -110,8 +110,8 @@ export default function StatsScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFFAF0' }}>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 20 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#FFFAF0' }} contentContainerStyle={{ paddingBottom: 20 }}>
+      <View style={styles.contentContainer}>
         <View style={styles.header}>
           <Text style={styles.title}>Estadísticas de Gratitud</Text>
           <Text style={styles.subtitle}>Tu progreso en gratitud</Text>
@@ -142,14 +142,17 @@ export default function StatsScreen() {
         <TouchableOpacity style={styles.refreshButton} onPress={loadStats}>
           <Text style={styles.refreshButtonText}>Actualizar Estadísticas</Text>
         </TouchableOpacity>
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
+  },
+  contentContainer: {
     padding: 20,
   },
   header: {

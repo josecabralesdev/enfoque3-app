@@ -198,14 +198,13 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Contenedor de la lista - ocupa el espacio restante */}
-      <View style={{ flex: 1 }}>
+    <View style={styles.container}>
+      <View style={{ flex: 1, width: '100%' }}>
         <FlatList
           data={photos}
           keyExtractor={(item) => item.id.toString()}
           key={`grid-${photos.length}`}
-          contentContainerStyle={styles.mosaicContainer}
+          contentContainerStyle={[styles.mosaicContainer, { paddingBottom: 150 }]}
           renderItem={renderPhotoItem}
           ListHeaderComponent={
             <View style={styles.logoContainer}>
@@ -218,7 +217,9 @@ export default function HomeScreen() {
             </View>
           }
           ListEmptyComponent={<Text style={styles.empty}>Tu tríptico de hoy está esperando...</Text>}
-          style={{ marginBottom: 120 }} // Add margin to account for fixed buttons
+          style={{ flex: 1 }}
+          scrollEnabled={true}
+          showsVerticalScrollIndicator={true}
         />
       </View>
 
@@ -249,14 +250,16 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-    </ScrollView>
+    </View>
   )
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFAF0'
+    height: Platform.OS === 'web' ? '100vh' : '100%',
+    backgroundColor: '#FFFAF0',
+    position: 'relative',
   },
   mosaicContainer: {
     paddingHorizontal: 10,
@@ -362,6 +365,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 250, 240, 0.9)',
     paddingHorizontal: 20,
     paddingBottom: 20,
+    zIndex: 10
   },
   btnText: {
     fontWeight: '600',

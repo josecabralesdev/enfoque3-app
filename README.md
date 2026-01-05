@@ -60,8 +60,3 @@ La aplicación requiere permisos de:
 - **Notificaciones:** Para los recordatorios diarios a las 8:00 PM.
 
 *Desarrollado como una herramienta para la salud mental y la apreciación diaria.*
-
-¿Te gustaría que añadiera un "Historial de Gratitud" para que el usuario pueda ver sus fotos de días anteriores deslizando hacia atrás?
-
-
-Ahora que el usuario puede gestionar sus fotos del día perfectamente, ¿te gustaría añadir un botón de compartir para que, aunque no haya red social interna, el usuario pueda enviar su "Tríptico de Gratitud" del día como una sola imagen a sus amigos por WhatsApp o Instagram?
