@@ -62,7 +62,7 @@ La aplicación requiere permisos de:
 *Desarrollado como una herramienta para la salud mental y la apreciación diaria.*
 
 ¿Te gustaría que añadiera un "Historial de Gratitud" para que el usuario pueda ver sus fotos de días anteriores deslizando hacia atrás?
-¿Quieres que personalicemos el mensaje de las notificaciones para que cada día de la semana sea una frase de gratitud distinta?
+
 ¿Te gustaría que te ayude a crear una Pantalla de Estadísticas simple para que el usuario vea cuántos días seguidos lleva practicando la gratitud?
 
 Ahora que el usuario puede gestionar sus fotos del día perfectamente, ¿te gustaría añadir un botón de compartir para que, aunque no haya red social interna, el usuario pueda enviar su "Tríptico de Gratitud" del día como una sola imagen a sus amigos por WhatsApp o Instagram?
